@@ -19,7 +19,7 @@ export function EmptyScreen() {
           </ExternalLink>
           , and{' '}
           <ExternalLink href="https://vercel.com/storage/kv">
-            Vercel KV
+            Vercel KV [This is another change for this project]
           </ExternalLink>
           .
         </p>
