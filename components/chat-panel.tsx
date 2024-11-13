@@ -36,24 +36,24 @@ export function ChatPanel({
 
   const exampleMessages = [
     {
-      heading: 'What are the',
-      subheading: 'trending memecoins today?',
-      message: `What are the trending memecoins today?`
+      heading: 'Get Started',
+      subheading: 'How do I get started?',
+      message: `How do I get started?`
     },
     {
-      heading: 'What is the price of',
-      subheading: '$DOGE right now?',
-      message: 'What is the price of $DOGE right now?'
+      heading: 'How does a for loop work',
+      subheading: 'in Kotlin',
+      message: 'How does a for loop work in Kotlin?'
     },
     {
-      heading: 'I would like to buy',
-      subheading: '42 $DOGE',
-      message: `I would like to buy 42 $DOGE`
+      heading: 'Can you create a practice exam',
+      subheading: 'based on the content in class?',
+      message: `Can you create a practice exam based on the content in class?`
     },
     {
-      heading: 'What are some',
-      subheading: `recent events about $DOGE?`,
-      message: `What are some recent events about $DOGE?`
+      heading: 'Can you review my writing',
+      subheading: `and point out any grammatical mistakes`,
+      message: `Can you review my writing and point out any grammatical mistakes`
     }
   ]
 
