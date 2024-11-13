@@ -12,7 +12,7 @@ export default async function SignupPage() {
 
   return (
     <main className="flex flex-col p-4">
-      <SignupForm />
+      {/* <SignupForm /> */}
     </main>
   )
 }
