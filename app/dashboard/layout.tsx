@@ -1,6 +1,17 @@
 import Link from 'next/link'
+import { auth } from '@/auth'
+import { redirect } from 'next/navigation'
+import { allowedEmails } from '@/lib/allowed-emails'
 
-export default function DashboardLayout() {
+export default async function DashboardLayout() {
+  const session = await auth()
+
+  // Check if user's email is in the allowed list
+  const email = session?.user?.email
+  if (!email || !allowedEmails.includes(email)) {
+    redirect('/') // Redirect unauthorized users to the home page
+  }
+
   return (
     <div className="mx-auto max-w-2xl px-4">
       <div className="flex flex-col gap-2 rounded-lg border bg-background p-8">
