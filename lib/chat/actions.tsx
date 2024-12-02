@@ -38,6 +38,7 @@ import { UserMessage } from '@/components/stocks/message'
 import { Chat, Message } from '@/lib/types'
 import { auth } from '@/auth'
 import { cookies } from 'next/headers'
+import { SpinnerMessage } from '@/components/spinner-message'
 
 const ASSISTANT_ID = process.env.OPENAI_ASSISTANT_ID
 
@@ -136,29 +137,13 @@ async function submitUserMessage(content: string) {
     }
 
     // Initialize UI with loading state
-    const streamContent = createStreamableValue('')
     const responseUI = createStreamableUI(
-      <SpinnerMessage />
+      <div className="opacity-60 transition-opacity duration-300">
+        <SpinnerMessage />
+      </div>
     )
 
-    // Get or create thread
-    let threadId = aiState.get().threadId
-    if (!threadId) {
-      const thread = await openAIClient.beta.threads.create()
-      threadId = thread.id
-      aiState.update({
-        ...aiState.get(),
-        threadId
-      })
-    }
-
-    // Add message to thread
-    await openAIClient.beta.threads.messages.create(threadId, {
-      role: 'user',
-      content
-    })
-
-    // Update UI state with user message
+    // Add message to thread immediately
     aiState.update({
       ...aiState.get(),
       messages: [
@@ -171,12 +156,29 @@ async function submitUserMessage(content: string) {
       ]
     })
 
+    // Get or create thread
+    let threadId = aiState.get().threadId
+    if (!threadId) {
+      const thread = await openAIClient.beta.threads.create()
+      threadId = thread.id
+      aiState.update({
+        ...aiState.get(),
+        threadId
+      })
+    }
+
+    // Add message to OpenAI thread
+    await openAIClient.beta.threads.messages.create(threadId, {
+      role: 'user',
+      content
+    })
+
     // Run the assistant
     const run = await openAIClient.beta.threads.runs.create(threadId, {
       assistant_id: selectedAssistantId
     })
 
-    // Wait for run to complete
+    // Wait for run to complete while showing loading state
     let runStatus = await openAIClient.beta.threads.runs.retrieve(threadId, run.id)
     
     while (runStatus.status !== 'completed') {
@@ -196,9 +198,9 @@ async function submitUserMessage(content: string) {
       throw new Error('Invalid response format')
     }
 
-    // Now TypeScript knows this is text content
     const messageContent = lastMessage.content[0].text.value
 
+    // Update AI state with assistant response
     aiState.update({
       ...aiState.get(),
       messages: [
@@ -211,8 +213,11 @@ async function submitUserMessage(content: string) {
       ]
     })
 
+    // Replace loading state with final response
     responseUI.done(
-      <BotMessage content={messageContent} />
+      <div className="opacity-100 transition-opacity duration-300">
+        <BotMessage content={messageContent} />
+      </div>
     )
 
     return {
@@ -310,15 +315,3 @@ export const getUIStateFromAIState = (aiState: Chat) => {
     .filter(Boolean)
 }
 
-export function SpinnerMessage() {
-  return (
-    <div className="group relative flex items-start md:-ml-12">
-      <div className="flex size-[24px] shrink-0 select-none items-center justify-center rounded-md border bg-primary text-primary-foreground shadow-sm">
-        <IconOpenAI />
-      </div>
-      <div className="ml-4 h-[24px] flex flex-row items-center flex-1 space-y-2 overflow-hidden px-1">
-        {spinner}
-      </div>
-    </div>
-  )
-}
