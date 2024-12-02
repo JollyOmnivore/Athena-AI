@@ -6,12 +6,13 @@ import { StocksSkeleton } from './stocks-skeleton'
 import { EventsSkeleton } from './events-skeleton'
 
 export { spinner } from './spinner'
-export { BotCard, BotMessage, SystemMessage } from './message'
+export { BotCard, BotMessage, SystemMessage, SpinnerMessage } from './message'
 
 const Stock = dynamic(() => import('./stock').then(mod => mod.Stock), {
   ssr: false,
   loading: () => <StockSkeleton />
 })
+
 
 const Purchase = dynamic(
   () => import('./stock-purchase').then(mod => mod.Purchase),
