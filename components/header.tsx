@@ -15,6 +15,7 @@ import { SidebarMobile } from './sidebar-mobile'
 import { SidebarToggle } from './sidebar-toggle'
 import { ChatHistory } from './chat-history'
 import { Session } from '@/lib/types'
+import { AssistantSelector } from '@/components/assistant-selector'
 
 async function UserOrLogin() {
   const session = (await auth()) as Session
@@ -26,6 +27,7 @@ async function UserOrLogin() {
             <ChatHistory userId={session.user.id} />
           </SidebarMobile>
           <SidebarToggle />
+          <AssistantSelector />
         </>
       ) : (
         <Link href="/new" rel="nofollow">
