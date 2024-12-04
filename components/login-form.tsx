@@ -19,7 +19,8 @@ export default function LoginForm() {
         toast.error(getMessageFromCode(result.resultCode))
       } else {
         toast.success(getMessageFromCode(result.resultCode))
-        router.refresh()
+        router.push('/redirector')
+        // router.refresh()
       }
     }
   }, [result, router])
