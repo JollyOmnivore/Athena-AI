@@ -20,11 +20,11 @@ interface Assistant {
 const assistants: Assistant[] = [
   {
     id: process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_1_ID || '',
-    name: 'Assistant 1'
+    name: 'CS 497 Neural Networks'
   },
   {
     id: process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_2_ID || '',
-    name: 'Assistant 2'
+    name: 'Funny Bot Test'
   }
 ]
 
@@ -34,6 +34,8 @@ export function AssistantSelector() {
     assistants[0].id
   )
   const [isUpdating, setIsUpdating] = useState(false)
+
+  const currentAssistant = assistants.find(a => a.id === selectedAssistantId)
 
   const updateAssistant = async (assistantId: string) => {
     if (isUpdating) return
@@ -55,7 +57,6 @@ export function AssistantSelector() {
       }
     } catch (error) {
       console.error('Error updating assistant:', error)
-      // Revert the local storage value if the server update failed
       setSelectedAssistantId(selectedAssistantId)
     } finally {
       setIsUpdating(false)
@@ -63,28 +64,33 @@ export function AssistantSelector() {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild disabled={isUpdating}>
-        <Button variant="ghost" size="icon" className="ml-2">
-          <IconMenu className="h-5 w-5" />
-          <span className="sr-only">Select Assistant</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {assistants.map(assistant => (
-          <DropdownMenuItem
-            key={assistant.id}
-            onClick={() => updateAssistant(assistant.id)}
-            className={cn(
-              selectedAssistantId === assistant.id ? 'bg-accent' : '',
-              isUpdating ? 'opacity-50 cursor-not-allowed' : ''
-            )}
-            disabled={isUpdating}
-          >
-            {assistant.name}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="flex items-center">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild disabled={isUpdating}>
+          <Button variant="ghost" size="icon" className="ml-2">
+            <IconMenu className="h-5 w-5" />
+            <span className="sr-only">Select Assistant</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {assistants.map(assistant => (
+            <DropdownMenuItem
+              key={assistant.id}
+              onClick={() => updateAssistant(assistant.id)}
+              className={cn(
+                selectedAssistantId === assistant.id ? 'bg-accent' : '',
+                isUpdating ? 'opacity-50 cursor-not-allowed' : ''
+              )}
+              disabled={isUpdating}
+            >
+              {assistant.name}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <span className="ml-2 text-sm text-muted-foreground">
+        {currentAssistant?.name}
+      </span>
+    </div>
   )
 }

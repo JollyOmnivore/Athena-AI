@@ -13,6 +13,22 @@ const loadingPhrases = [
   "Reviewing learning materials..."
 ]
 
+interface Assistant {
+  id: string
+  name: string
+}
+
+const assistants: Assistant[] = [
+  {
+    id: process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_1_ID || '',
+    name: 'CS 497 Neural Networks'
+  },
+  {
+    id: process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_2_ID || '',
+    name: 'Funny Bot Test'
+  }
+]
+
 export function SpinnerMessage() {
   const [currentPhrase, setCurrentPhrase] = useState(loadingPhrases[0])
   
