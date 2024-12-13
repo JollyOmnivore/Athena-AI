@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button'
 import { IconMenu } from '@/components/ui/icons'
 import { useLocalStorage } from '@/lib/hooks/use-local-storage'
 import { cn } from '@/lib/utils'
+import { useRouter } from 'next/navigation'
+import { nanoid } from '@/lib/utils'
 
 interface Assistant {
   id: string
@@ -29,6 +31,7 @@ const assistants: Assistant[] = [
 ]
 
 export function AssistantSelector() {
+  const router = useRouter()
   const [selectedAssistantId, setSelectedAssistantId] = useLocalStorage(
     'selectedAssistantId',
     assistants[0].id
@@ -55,6 +58,12 @@ export function AssistantSelector() {
       if (!response.ok) {
         throw new Error('Failed to update assistant')
       }
+
+      // Generate new chat ID and redirect
+      const newChatId = nanoid()
+      router.push(`/chat/${newChatId}`)
+      router.refresh()
+
     } catch (error) {
       console.error('Error updating assistant:', error)
       setSelectedAssistantId(selectedAssistantId)
