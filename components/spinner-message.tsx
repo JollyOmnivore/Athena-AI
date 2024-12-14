@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { spinner } from '@/components/stocks/spinner'
 import { IconOpenAI } from '@/components/ui/icons'
+import assistantConfig from '@/config/assistants.json'
 
 const loadingPhrases = [
   "Vectorizing coursework...",
@@ -16,18 +17,14 @@ const loadingPhrases = [
 interface Assistant {
   id: string
   name: string
+  description?: string
 }
 
-const assistants: Assistant[] = [
-  {
-    id: process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_1_ID || '',
-    name: 'CS 497 Neural Networks'
-  },
-  {
-    id: process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_2_ID || '',
-    name: 'Funny Bot Test'
-  }
-]
+const assistants: Assistant[] = assistantConfig.assistants.map(assistant => ({
+  id: process.env[assistant.id] || '',
+  name: assistant.name,
+  description: assistant.description
+}))
 
 export function SpinnerMessage() {
   const [currentPhrase, setCurrentPhrase] = useState(loadingPhrases[0])

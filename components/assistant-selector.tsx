@@ -13,22 +13,20 @@ import { useLocalStorage } from '@/lib/hooks/use-local-storage'
 import { cn } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { nanoid } from '@/lib/utils'
+import assistantConfig from '@/config/assistants.json'
 
 interface Assistant {
   id: string
   name: string
+  description?: string
 }
 
-const assistants: Assistant[] = [
-  {
-    id: process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_1_ID || '',
-    name: 'CS 497 Neural Networks'
-  },
-  {
-    id: process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_2_ID || '',
-    name: 'Funny Bot Test'
-  }
-]
+// Map the configuration to actual assistant objects with environment variables
+const assistants: Assistant[] = assistantConfig.assistants.map(assistant => ({
+  id: process.env[assistant.id] || '',
+  name: assistant.name,
+  description: assistant.description
+}))
 
 export function AssistantSelector() {
   const router = useRouter()
@@ -37,15 +35,28 @@ export function AssistantSelector() {
     assistants[0].id
   )
   const [isUpdating, setIsUpdating] = useState(false)
-
   const currentAssistant = assistants.find(a => a.id === selectedAssistantId)
+
+  // Add effect to check selected assistant on mount and after navigation
+  useEffect(() => {
+    // Get the assistant ID from the cookie
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`
+      const parts = value.split(`; ${name}=`)
+      if (parts.length === 2) return parts.pop()?.split(';').shift()
+    }
+    
+    const cookieAssistantId = getCookie('selectedAssistantId')
+    if (cookieAssistantId && cookieAssistantId !== selectedAssistantId) {
+      setSelectedAssistantId(cookieAssistantId)
+    }
+  }, [setSelectedAssistantId])
 
   const updateAssistant = async (assistantId: string) => {
     if (isUpdating) return
     
     try {
       setIsUpdating(true)
-      setSelectedAssistantId(assistantId)
       
       const response = await fetch('/api/set-assistant', {
         method: 'POST',
@@ -59,6 +70,8 @@ export function AssistantSelector() {
         throw new Error('Failed to update assistant')
       }
 
+      setSelectedAssistantId(assistantId)
+
       // Generate new chat ID and redirect
       const newChatId = nanoid()
       router.push(`/chat/${newChatId}`)
@@ -66,7 +79,6 @@ export function AssistantSelector() {
 
     } catch (error) {
       console.error('Error updating assistant:', error)
-      setSelectedAssistantId(selectedAssistantId)
     } finally {
       setIsUpdating(false)
     }
