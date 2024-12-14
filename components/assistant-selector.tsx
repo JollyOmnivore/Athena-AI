@@ -20,11 +20,19 @@ interface Assistant {
 const assistants: Assistant[] = [
   {
     id: process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_1_ID || '',
-    name: 'Assistant 1'
+    name: 'CS490 Neural Networks'
   },
   {
     id: process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_2_ID || '',
     name: 'Assistant 2'
+  },
+  {
+    id: process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_3_ID || '',
+    name: 'Writing Assistant'
+  },
+  {
+    id: process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_4_ID || '',
+    name: 'Vanilla ChatGPT4o (Faculty Only)'
   }
 ]
 
@@ -34,6 +42,10 @@ export function AssistantSelector() {
     assistants[0].id
   )
   const [isUpdating, setIsUpdating] = useState(false)
+
+  const selectedAssistant = assistants.find(
+    assistant => assistant.id === selectedAssistantId
+  )
 
   const updateAssistant = async (assistantId: string) => {
     if (isUpdating) return
@@ -65,9 +77,10 @@ export function AssistantSelector() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild disabled={isUpdating}>
-        <Button variant="ghost" size="icon" className="ml-2">
+        <Button variant="ghost" size="icon" className="ml-2 px-4 w-full">
           <IconMenu className="h-5 w-5" />
           <span className="sr-only">Select Assistant</span>
+          <span className="ml-2">{selectedAssistant?.name}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
