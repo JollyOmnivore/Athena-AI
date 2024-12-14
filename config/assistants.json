@@ -1,0 +1,14 @@
+{
+  "assistants": [
+    {
+      "id": "NEXT_PUBLIC_OPENAI_ASSISTANT_1_ID",
+      "name": "CS 497 Neural Networks",
+      "description": "AI tutor for Neural Networks course"
+    },
+    {
+      "id": "NEXT_PUBLIC_OPENAI_ASSISTANT_2_ID",
+      "name": "Funny Bot Test",
+      "description": "Test bot with humor"
+    }
+  ]
+} 
