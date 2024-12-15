@@ -6,31 +6,19 @@ import { IconArrowRight } from '@/components/ui/icons'
 
 export function EmptyScreen() {
   return (
-    <div className="mx-auto max-w-2xl px-4">
-      <div className="flex flex-col gap-2 rounded-lg border bg-background p-8">
+    <div className="mx-auto max-w-3xl px-4">
+      <div className="flex flex-col gap-2 rounded-lg border bg-background p-6">
         <h1 className="text-lg font-semibold">
-          Welcome to Next.js AI Chatbot! Test input on a change.
+          Welcome to Athena AI
         </h1>
         <p className="leading-normal text-muted-foreground">
-          This is an open source AI chatbot app template built with{' '}
-          <ExternalLink href="https://nextjs.org">Next.js</ExternalLink>, the{' '}
-          <ExternalLink href="https://sdk.vercel.ai">
-            Vercel AI SDK
-          </ExternalLink>
-          , and{' '}
-          <ExternalLink href="https://vercel.com/storage/kv">
-            Vercel KV [This is another change for this project]
-          </ExternalLink>
-          .
+          The best AI-powered tutoring platform, fusing high-powered industry-standard models with academic honesty and transparency.
         </p>
         <p className="leading-normal text-muted-foreground">
-          It uses{' '}
-          <ExternalLink href="https://vercel.com/blog/ai-sdk-3-generative-ui">
-            React Server Components
-          </ExternalLink>{' '}
-          to combine text with generative UI as output of the LLM. The UI state
-          is synced through the SDK so the model is aware of your interactions
-          as they happen.
+          Our platform allows professors to create tailored chatbots for their students, upholding academic integrity by discouraging cheating and enabling high-quality learning anytime, anywhere.
+        </p>
+        <p className="leading-normal text-muted-foreground">
+          Experience the future of education with Athena AI, where innovation and learning converge.
         </p>
       </div>
     </div>
