@@ -4,17 +4,14 @@ import * as React from 'react'
 
 import { cn } from '@/lib/utils'
 
-function IconOpenAI({ className, ...props }: React.ComponentProps<'svg'>) {
+function IconOpenAI({ className, ...props }: React.ComponentProps<'img'>) {
   return (
-    <svg
-      fill="currentColor"
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-      className={cn('size-4', className)}
+    <img
+      src="/apple-touch-icon.png"
+      alt="OpenAI Icon"
+      className={cn('size-4', className)} 
       {...props}
-    >
-      <path d="M16.402 8.404a3.061 3.061 0 0 0-.296-2.506 3.097 3.097 0 0 0-3.327-1.483 3.103 3.103 0 0 0-5.183-2.892 3.061 3.061 0 0 0-2.042 1.482A3.097 3.097 0 0 0 3.34 4.087a3.061 3.061 0 0 0-1.482 2.042 3.097 3.097 0 0 0 .38 3.624A3.061 3.061 0 0 0 2.53 12.26a3.097 3.097 0 0 0 3.327 1.483 3.103 3.103 0 0 0 5.183 2.892 3.061 3.061 0 0 0 2.042-1.482 3.097 3.097 0 0 0 2.214-1.082 3.061 3.061 0 0 0 1.482-2.042 3.097 3.097 0 0 0-.38-3.624z" />
-    </svg>
+    />
   )
 }
 

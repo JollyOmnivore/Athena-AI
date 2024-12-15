@@ -11,11 +11,8 @@ import { Button } from '@/components/ui/button'
 import { IconMenu } from '@/components/ui/icons'
 import { useLocalStorage } from '@/lib/hooks/use-local-storage'
 import { cn } from '@/lib/utils'
-
-
 import { useRouter } from 'next/navigation'
 import { nanoid } from '@/lib/utils'
-
 
 interface Assistant {
   id: string
@@ -25,12 +22,11 @@ interface Assistant {
 const assistants: Assistant[] = [
   {
     id: process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_1_ID || '',
-
     name: 'CS490 Neural Networks'
   },
   {
     id: process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_2_ID || '',
-    name: 'Assistant 2'
+    name: 'ANTH 107 Intro to Anthropology'
   },
   {
     id: process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_3_ID || '',
@@ -39,7 +35,6 @@ const assistants: Assistant[] = [
   {
     id: process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_4_ID || '',
     name: 'Vanilla ChatGPT4o (Faculty Only)'
-
   }
 ]
 
@@ -49,6 +44,7 @@ export function AssistantSelector() {
     assistants[0].id
   )
   const [isUpdating, setIsUpdating] = useState(false)
+  const router = useRouter()
 
   const selectedAssistant = assistants.find(
     assistant => assistant.id === selectedAssistantId
@@ -72,6 +68,10 @@ export function AssistantSelector() {
       if (!response.ok) {
         throw new Error('Failed to update assistant')
       }
+
+      // Generate a new chat ID and navigate to the new chat
+      const newChatId = nanoid()
+      router.push(`/chat/${newChatId}`)
     } catch (error) {
       console.error('Error updating assistant:', error)
       // Revert the local storage value if the server update failed
@@ -80,6 +80,7 @@ export function AssistantSelector() {
       setIsUpdating(false)
     }
   }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild disabled={isUpdating}>
