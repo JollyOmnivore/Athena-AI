@@ -22,17 +22,17 @@ export const authConfig = {
     },
     async jwt({ token, user }) {
       if (user) {
-        token = { ...token, id: user.id }
+        token = { ...token, id: user.id, email: user.email }
       }
 
       return token
     },
     async session({ session, token }) {
       if (token) {
-        const { id } = token as { id: string }
+        const { id, email } = token as { id: string; email: string }
         const { user } = session
 
-        session = { ...session, user: { ...user, id } }
+        session = { ...session, user: { ...user, id, email } }
       }
 
       return session
