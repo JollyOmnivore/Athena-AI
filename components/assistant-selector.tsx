@@ -11,8 +11,11 @@ import { Button } from '@/components/ui/button'
 import { IconMenu } from '@/components/ui/icons'
 import { useLocalStorage } from '@/lib/hooks/use-local-storage'
 import { cn } from '@/lib/utils'
+
+
 import { useRouter } from 'next/navigation'
 import { nanoid } from '@/lib/utils'
+
 
 interface Assistant {
   id: string
@@ -22,23 +25,34 @@ interface Assistant {
 const assistants: Assistant[] = [
   {
     id: process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_1_ID || '',
-    name: 'CS 497 Neural Networks'
+
+    name: 'CS490 Neural Networks'
   },
   {
     id: process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_2_ID || '',
-    name: 'Funny Bot Test'
+    name: 'Assistant 2'
+  },
+  {
+    id: process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_3_ID || '',
+    name: 'Writing Assistant'
+  },
+  {
+    id: process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_4_ID || '',
+    name: 'Vanilla ChatGPT4o (Faculty Only)'
+
   }
 ]
 
 export function AssistantSelector() {
-  const router = useRouter()
   const [selectedAssistantId, setSelectedAssistantId] = useLocalStorage(
     'selectedAssistantId',
     assistants[0].id
   )
   const [isUpdating, setIsUpdating] = useState(false)
 
-  const currentAssistant = assistants.find(a => a.id === selectedAssistantId)
+  const selectedAssistant = assistants.find(
+    assistant => assistant.id === selectedAssistantId
+  )
 
   const updateAssistant = async (assistantId: string) => {
     if (isUpdating) return
@@ -58,48 +72,38 @@ export function AssistantSelector() {
       if (!response.ok) {
         throw new Error('Failed to update assistant')
       }
-
-      // Generate new chat ID and redirect
-      const newChatId = nanoid()
-      router.push(`/chat/${newChatId}`)
-      router.refresh()
-
     } catch (error) {
       console.error('Error updating assistant:', error)
+      // Revert the local storage value if the server update failed
       setSelectedAssistantId(selectedAssistantId)
     } finally {
       setIsUpdating(false)
     }
   }
-
   return (
-    <div className="flex items-center">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild disabled={isUpdating}>
-          <Button variant="ghost" size="icon" className="ml-2">
-            <IconMenu className="h-5 w-5" />
-            <span className="sr-only">Select Assistant</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {assistants.map(assistant => (
-            <DropdownMenuItem
-              key={assistant.id}
-              onClick={() => updateAssistant(assistant.id)}
-              className={cn(
-                selectedAssistantId === assistant.id ? 'bg-accent' : '',
-                isUpdating ? 'opacity-50 cursor-not-allowed' : ''
-              )}
-              disabled={isUpdating}
-            >
-              {assistant.name}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <span className="ml-2 text-sm text-muted-foreground">
-        {currentAssistant?.name}
-      </span>
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild disabled={isUpdating}>
+        <Button variant="ghost" size="icon" className="ml-2 px-4 w-full">
+          <IconMenu className="h-5 w-5" />
+          <span className="sr-only">Select Assistant</span>
+          <span className="ml-2">{selectedAssistant?.name}</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {assistants.map(assistant => (
+          <DropdownMenuItem
+            key={assistant.id}
+            onClick={() => updateAssistant(assistant.id)}
+            className={cn(
+              selectedAssistantId === assistant.id ? 'bg-accent' : '',
+              isUpdating ? 'opacity-50 cursor-not-allowed' : ''
+            )}
+            disabled={isUpdating}
+          >
+            {assistant.name}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
