@@ -37,13 +37,13 @@ export default function LoginForm() {
       ></div>
 
       {/* Right side with login box */}
-      <div className="w-1/4 flex items-center justify-center bg-white">
-        <div className="w-full max-w-md bg-white rounded-lg shadow-lg">
+      <div className="w-1/4 flex items-start justify-center bg-white min-h-screen">
+        <div className="w-full max-w-md bg-white rounded-lg">
           <div className="flex flex-col items-center py-6 px-8">
             <img
               src="https://logowik.com/content/uploads/images/t_western-colorado-university5212.logowik.com.webp"
               alt="Western Logo"
-              className="w-60 h-40"
+              className="flex items-end"
             />
             <h1 className="text-xl font-bold text-gray-800 dark:text-black mb-2">
               Western Colorado University
@@ -59,13 +59,13 @@ export default function LoginForm() {
           >
             <div>
               <label
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="block text-lg font-medium text-black"
                 htmlFor="email"
               >
                 Email
               </label>
               <input
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                className="mt-1 block w-full rounded-md border-gray-700 bg-white text-black shadow-sm focus:border-gray-500 focus:ring-indigo-500 dark:border-gray-800 dark:bg-white dark:text-gray-500"
                 id="email"
                 type="email"
                 name="email"
@@ -75,13 +75,13 @@ export default function LoginForm() {
             </div>
             <div>
               <label
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="block text-lg font-medium text-black"
                 htmlFor="password"
               >
                 Password
               </label>
               <input
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                className="mt-1 block w-full rounded-md border-gray-700 bg-white text-black shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-white dark:text-gray-500"
                 id="password"
                 type="password"
                 name="password"
