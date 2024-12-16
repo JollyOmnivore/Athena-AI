@@ -54,7 +54,7 @@ export function PromptForm({
 
         // Optimistically add user message UI
         setMessages(currentMessages => [
-          ...currentMessages,
+          ...(Array.isArray(currentMessages) ? currentMessages : []),
           {
             id: nanoid(),
             display: <UserMessage>{value}</UserMessage>
@@ -63,7 +63,10 @@ export function PromptForm({
 
         // Submit and get response message
         const responseMessage = await submitUserMessage(value)
-        setMessages(currentMessages => [...currentMessages, responseMessage])
+        setMessages(currentMessages => [
+          ...(Array.isArray(currentMessages) ? currentMessages : []),
+          responseMessage
+        ])
       }}
     >
       <div className="relative flex max-h-60 w-full grow flex-col overflow-hidden bg-background px-8 sm:rounded-md sm:border sm:px-12">
