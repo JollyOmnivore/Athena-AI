@@ -59,104 +59,124 @@ async function submitUserMessage(content: string) {
   try {
     const cookieStore = cookies()
     const selectedAssistantId = cookieStore.get('selectedAssistantId')?.value ||
-        process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_1_ID
+      process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_1_ID
 
     if (!selectedAssistantId) {
       throw new Error('No assistant ID available')
     }
 
-
     const responseUI = createStreamableUI(
-        <div className="opacity-60 transition-opacity duration-300">
-          <SpinnerMessage />
-        </div>
+      <div className="opacity-60 transition-opacity duration-300">
+        <SpinnerMessage />
+      </div>
     )
 
+    // Set timeout for the entire operation
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timeout')), 50000) // 50 second timeout
+    })
 
-    aiState.update({
-      ...aiState.get(),
-      messages: [
-        ...aiState.get().messages,
-        {
-          id: nanoid(),
+    const messagePromise = (async () => {
+      try {
+        aiState.update({
+          ...aiState.get(),
+          messages: [
+            ...aiState.get().messages || [],
+            {
+              id: nanoid(),
+              role: 'user',
+              content
+            }
+          ]
+        })
+
+        let threadId = aiState.get().threadId
+        if (!threadId) {
+          const thread = await openAIClient.beta.threads.create()
+          threadId = thread.id
+          aiState.update({
+            ...aiState.get(),
+            threadId
+          })
+        }
+
+        await openAIClient.beta.threads.messages.create(threadId, {
           role: 'user',
           content
+        })
+
+        const run = await openAIClient.beta.threads.runs.create(threadId, {
+          assistant_id: selectedAssistantId
+        })
+
+        let runStatus = await openAIClient.beta.threads.runs.retrieve(threadId, run.id)
+        let attempts = 0
+        const maxAttempts = 30 // 30 seconds max wait
+
+        while (runStatus.status !== 'completed' && attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 1000))
+          runStatus = await openAIClient.beta.threads.runs.retrieve(threadId, run.id)
+          attempts++
+
+          if (runStatus.status === 'failed') {
+            throw new Error('Assistant run failed')
+          }
         }
-      ]
-    })
 
+        if (attempts >= maxAttempts) {
+          throw new Error('Request timed out')
+        }
 
-    let threadId = aiState.get().threadId
-    if (!threadId) {
-      const thread = await openAIClient.beta.threads.create()
-      threadId = thread.id
-      aiState.update({
-        ...aiState.get(),
-        threadId
-      })
-    }
+        const messages = await openAIClient.beta.threads.messages.list(threadId)
+        const lastMessage = messages.data[0]
 
+        if (!lastMessage.content[0] || lastMessage.content[0].type !== 'text') {
+          throw new Error('Invalid response format')
+        }
 
-    await openAIClient.beta.threads.messages.create(threadId, {
-      role: 'user',
-      content
-    })
+        const messageContent = lastMessage.content[0].text.value
 
+        aiState.update({
+          ...aiState.get(),
+          messages: [
+            ...aiState.get().messages || [],
+            {
+              id: nanoid(),
+              role: 'assistant', 
+              content: messageContent
+            }
+          ]
+        })
 
-    const run = await openAIClient.beta.threads.runs.create(threadId, {
-      assistant_id: selectedAssistantId
-    })
+        responseUI.done(
+          <div className="opacity-100 transition-opacity duration-300">
+            <BotMessage content={messageContent} />
+          </div>
+        )
 
-    // Wait for run to complete while showing loading state
-    let runStatus = await openAIClient.beta.threads.runs.retrieve(threadId, run.id)
-
-    while (runStatus.status !== 'completed') {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      runStatus = await openAIClient.beta.threads.runs.retrieve(threadId, run.id)
-
-      if (runStatus.status === 'failed') {
-        throw new Error('Run failed')
-      }
-    }
-
-    // Get messages
-    const messages = await openAIClient.beta.threads.messages.list(threadId)
-    const lastMessage = messages.data[0]
-
-    if (!lastMessage.content[0] || lastMessage.content[0].type !== 'text') {
-      throw new Error('Invalid response format')
-    }
-
-    const messageContent = lastMessage.content[0].text.value
-
-    // Update AI state with assistant response
-    aiState.update({
-      ...aiState.get(),
-      messages: [
-        ...aiState.get().messages,
-        {
+        return {
           id: nanoid(),
-          role: 'assistant',
-          content: messageContent
+          display: responseUI.value
         }
-      ]
-    })
+      } catch (error) {
+        console.error('Error in message processing:', error)
+        throw error
+      }
+    })()
 
-    // Replace with message from API
-    responseUI.done(
-        <div className="opacity-100 transition-opacity duration-300">
-          <BotMessage content={messageContent} />
-        </div>
-    )
-
-    return {
-      id: nanoid(),
-      display: responseUI.value
-    }
+    return await Promise.race([messagePromise, timeoutPromise])
 
   } catch (error) {
     console.error('Error in submitUserMessage:', error)
-    throw error
+    // Show error UI
+    return {
+      id: nanoid(),
+      display: (
+        <div className="text-red-500">
+          Error: Failed to get response. Please try again.
+        </div>
+      )
+    }
   }
 }
 
