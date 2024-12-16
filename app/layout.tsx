@@ -7,6 +7,8 @@ import { TailwindIndicator } from '@/components/tailwind-indicator'
 import { Providers } from '@/components/providers'
 import { Header } from '@/components/header'
 import { Toaster } from '@/components/ui/sonner'
+import { auth } from '@/auth'
+import { allowedEmails } from '@/lib/allowed-emails'
 
 export const metadata = {
   metadataBase: process.env.VERCEL_URL
