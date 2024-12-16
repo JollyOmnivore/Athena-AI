@@ -71,17 +71,19 @@ async function submitUserMessage(content: string) {
       </div>
     )
 
-    // Set timeout for the entire operation
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Request timeout')), 50000) // 50 second timeout
+      setTimeout(() => reject(new Error('Request timeout')), 200000)
     })
 
     const messagePromise = (async () => {
       try {
+        // Ensure messages array exists before spreading
+        const currentMessages = aiState.get().messages || []
+        
         aiState.update({
           ...aiState.get(),
           messages: [
-            ...aiState.get().messages || [],
+            ...currentMessages,
             {
               id: nanoid(),
               role: 'user',
@@ -111,7 +113,7 @@ async function submitUserMessage(content: string) {
 
         let runStatus = await openAIClient.beta.threads.runs.retrieve(threadId, run.id)
         let attempts = 0
-        const maxAttempts = 30 // 30 seconds max wait
+        const maxAttempts = 200
 
         while (runStatus.status !== 'completed' && attempts < maxAttempts) {
           await new Promise(resolve => setTimeout(resolve, 1000))
@@ -124,7 +126,19 @@ async function submitUserMessage(content: string) {
         }
 
         if (attempts >= maxAttempts) {
-          throw new Error('Request timed out')
+          return {
+            id: nanoid(),
+            display: (
+              <div className="flex flex-col gap-2">
+                <div className="text-red-500">
+                  The response took too long. The assistant might be processing a complex request.
+                </div>
+                <div className="text-muted-foreground text-sm">
+                  Please try asking your question again or break it into smaller parts.
+                </div>
+              </div>
+            )
+          }
         }
 
         const messages = await openAIClient.beta.threads.messages.list(threadId)
@@ -136,10 +150,13 @@ async function submitUserMessage(content: string) {
 
         const messageContent = lastMessage.content[0].text.value
 
+        // Ensure messages array exists before spreading in the update
+        const updatedMessages = aiState.get().messages || []
+        
         aiState.update({
           ...aiState.get(),
           messages: [
-            ...aiState.get().messages || [],
+            ...updatedMessages,
             {
               id: nanoid(),
               role: 'assistant', 
@@ -168,7 +185,6 @@ async function submitUserMessage(content: string) {
 
   } catch (error) {
     console.error('Error in submitUserMessage:', error)
-    // Show error UI
     return {
       id: nanoid(),
       display: (
