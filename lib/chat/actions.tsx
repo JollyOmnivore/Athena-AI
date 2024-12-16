@@ -65,14 +65,14 @@ async function submitUserMessage(content: string) {
       throw new Error('No assistant ID available')
     }
 
-    // Initialize UI with loading state
+
     const responseUI = createStreamableUI(
         <div className="opacity-60 transition-opacity duration-300">
           <SpinnerMessage />
         </div>
     )
 
-    // Add message to thread immediately
+
     aiState.update({
       ...aiState.get(),
       messages: [
@@ -85,7 +85,7 @@ async function submitUserMessage(content: string) {
       ]
     })
 
-    // Get or create thread
+
     let threadId = aiState.get().threadId
     if (!threadId) {
       const thread = await openAIClient.beta.threads.create()
@@ -96,13 +96,13 @@ async function submitUserMessage(content: string) {
       })
     }
 
-    // Add message to OpenAI thread
+
     await openAIClient.beta.threads.messages.create(threadId, {
       role: 'user',
       content
     })
 
-    // Run the assistant
+
     const run = await openAIClient.beta.threads.runs.create(threadId, {
       assistant_id: selectedAssistantId
     })
@@ -142,7 +142,7 @@ async function submitUserMessage(content: string) {
       ]
     })
 
-    // Replace loading state with final response
+    // Replace with message from API
     responseUI.done(
         <div className="opacity-100 transition-opacity duration-300">
           <BotMessage content={messageContent} />
@@ -160,26 +160,20 @@ async function submitUserMessage(content: string) {
   }
 }
 
-/**
- * Type definition for the AI's state
- */
+
 export type AIState = {
-  chatId: string          // Unique identifier for the chat session
-  threadId?: string       // OpenAI thread ID for conversation continuity
-  messages: Message[]     // Array of messages in the conversation
+  chatId: string          
+  threadId?: string      
+  messages: Message[]     
 }
 
-/**
- * Type definition for UI state elements
- */
+
 export type UIState = {
-  id: string             // Unique identifier for UI element
-  display: React.ReactNode // React component to display
+  id: string             
+  display: React.ReactNode 
 }[]
 
-/**
- * Initialize the AI with configuration and state management
- */
+
 export const AI = createAI<AIState, UIState>({
   actions: {
     submitUserMessage

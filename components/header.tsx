@@ -16,9 +16,11 @@ import { SidebarToggle } from './sidebar-toggle'
 import { ChatHistory } from './chat-history'
 import { Session } from '@/lib/types'
 import { AssistantSelector } from '@/components/assistant-selector'
+import { allowedEmails } from '@/lib/allowed-emails'
 
 async function UserOrLogin() {
   const session = (await auth()) as Session
+  const email = session?.user?.email
   return (
     <>
       {session?.user ? (
@@ -28,6 +30,11 @@ async function UserOrLogin() {
           </SidebarMobile>
           <SidebarToggle />
           <AssistantSelector />
+          {email && allowedEmails.includes(email) && (
+            <Button variant="default" asChild className="ml-4">
+              <Link href="/dashboard">Go to Dashboard</Link>
+            </Button>
+          )}
         </>
       ) : (
         <Link href="/new" rel="nofollow">
