@@ -80,10 +80,10 @@ async function submitUserMessage(content: string) {
     }
 
     // Add user message to state
-    const userMessage = {
+    const userMessage: Message = {
       id: nanoid(),
       role: 'user',
-      content
+      content: content
     }
 
     aiState.update({
@@ -153,7 +153,7 @@ async function submitUserMessage(content: string) {
       const messageContent = lastMessage.content[0].text.value
 
       // Add assistant message to state
-      const assistantMessage = {
+      const assistantMessage: Message = {
         id: nanoid(),
         role: 'assistant',
         content: messageContent
@@ -161,7 +161,7 @@ async function submitUserMessage(content: string) {
 
       aiState.update({
         ...aiState.get(),
-        messages: [...(!(!aiState.get().messages && ![])), assistantMessage]
+        messages: [...(aiState.get().messages || []), assistantMessage]
       })
 
       responseUI.done(
