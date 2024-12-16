@@ -29,11 +29,9 @@ export function BotMessage({
   content,
   className
 }: {
-  content: string | StreamableValue<string>
+  content: string
   className?: string
 }) {
-  const text = useStreamableText(content)
-
   return (
     <div className={cn('group relative flex items-start md:-ml-12', className)}>
       <div className="flex size-[24px] shrink-0 select-none items-center justify-center rounded-md border bg-primary text-primary-foreground shadow-sm">
@@ -49,7 +47,7 @@ export function BotMessage({
             },
             code({ node, inline, className, children, ...props }) {
               if (children.length) {
-                if (children[0] == '▍') {
+                if (children[0] === '▍') {
                   return (
                     <span className="mt-1 animate-pulse cursor-default">▍</span>
                   )
@@ -79,7 +77,7 @@ export function BotMessage({
             }
           }}
         >
-          {text}
+          {content}
         </MemoizedReactMarkdown>
       </div>
     </div>

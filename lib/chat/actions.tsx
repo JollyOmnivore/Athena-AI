@@ -15,8 +15,7 @@ import {
   BotCard,
   BotMessage,
   SystemMessage,
-  Stock,
-  Purchase
+  Stock
 } from '@/components/stocks'
 
 import { z } from 'zod'
@@ -47,76 +46,6 @@ const openAIClient = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 })
 
-async function confirmPurchase(symbol: string, price: number, amount: number) {
-  'use server'
-
-  const aiState = getMutableAIState<typeof AI>()
-
-  const purchasing = createStreamableUI(
-      <div className="inline-flex items-start gap-1 md:items-center">
-        {spinner}
-        <p className="mb-2">
-          Purchasing {amount} ${symbol}...
-        </p>
-      </div>
-  )
-
-  const systemMessage = createStreamableUI(null)
-
-  runAsyncFnWithoutBlocking(async () => {
-    await sleep(1000)
-    
-    purchasing.update(
-        <div className="inline-flex items-start gap-1 md:items-center">
-          {spinner}
-          <p className="mb-2">
-            Purchasing {amount} ${symbol}... working on it...
-          </p>
-        </div>
-    )
-
-    await sleep(1000)
-
-    purchasing.done(
-        <div>
-          <p className="mb-2">
-            You have successfully purchased {amount} ${symbol}. Total cost:{' '}
-            {formatNumber(amount * price)}
-          </p>
-        </div>
-    )
-
-    systemMessage.done(
-        <SystemMessage>
-          You have purchased {amount} shares of {symbol} at ${price}. Total cost ={' '}
-          {formatNumber(amount * price)}.
-        </SystemMessage>
-    )
-
-    aiState.done({
-      ...aiState.get(),
-      messages: [
-        ...aiState.get().messages,
-        {
-          id: nanoid(),
-          role: 'system',
-          content: `[User has purchased ${amount} shares of ${symbol} at ${price}. Total cost = ${
-              amount * price
-          }]`
-        }
-      ]
-    })
-  })
-
-  return {
-    purchasingUI: purchasing.value,
-    newMessage: {
-      id: nanoid(),
-      display: systemMessage.value
-    }
-  }
-}
-
 /**
  * Submits a user message to the OpenAI Assistant and handles the response stream
  * @param content - The user's message content
@@ -124,13 +53,13 @@ async function confirmPurchase(symbol: string, price: number, amount: number) {
  */
 async function submitUserMessage(content: string) {
   'use server'
-  
+
   const aiState = getMutableAIState<typeof AI>()
-  
+
   try {
     const cookieStore = cookies()
-    const selectedAssistantId = cookieStore.get('selectedAssistantId')?.value || 
-      process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_1_ID
+    const selectedAssistantId = cookieStore.get('selectedAssistantId')?.value ||
+        process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_1_ID
 
     if (!selectedAssistantId) {
       throw new Error('No assistant ID available')
@@ -138,9 +67,9 @@ async function submitUserMessage(content: string) {
 
     // Initialize UI with loading state
     const responseUI = createStreamableUI(
-      <div className="opacity-60 transition-opacity duration-300">
-        <SpinnerMessage />
-      </div>
+        <div className="opacity-60 transition-opacity duration-300">
+          <SpinnerMessage />
+        </div>
     )
 
     // Add message to thread immediately
@@ -180,11 +109,11 @@ async function submitUserMessage(content: string) {
 
     // Wait for run to complete while showing loading state
     let runStatus = await openAIClient.beta.threads.runs.retrieve(threadId, run.id)
-    
+
     while (runStatus.status !== 'completed') {
       await new Promise(resolve => setTimeout(resolve, 1000))
       runStatus = await openAIClient.beta.threads.runs.retrieve(threadId, run.id)
-      
+
       if (runStatus.status === 'failed') {
         throw new Error('Run failed')
       }
@@ -193,7 +122,7 @@ async function submitUserMessage(content: string) {
     // Get messages
     const messages = await openAIClient.beta.threads.messages.list(threadId)
     const lastMessage = messages.data[0]
-    
+
     if (!lastMessage.content[0] || lastMessage.content[0].type !== 'text') {
       throw new Error('Invalid response format')
     }
@@ -215,9 +144,9 @@ async function submitUserMessage(content: string) {
 
     // Replace loading state with final response
     responseUI.done(
-      <div className="opacity-100 transition-opacity duration-300">
-        <BotMessage content={messageContent} />
-      </div>
+        <div className="opacity-100 transition-opacity duration-300">
+          <BotMessage content={messageContent} />
+        </div>
     )
 
     return {
@@ -253,8 +182,7 @@ export type UIState = {
  */
 export const AI = createAI<AIState, UIState>({
   actions: {
-    submitUserMessage,
-    confirmPurchase
+    submitUserMessage
   },
   initialUIState: [],
   initialAIState: {
@@ -266,25 +194,25 @@ export const AI = createAI<AIState, UIState>({
     'use server'
     const session = await auth()
     if (!session?.user) return []
-    
+
     const aiState = getAIState() as Chat
     if (!aiState?.messages) return []
-    
+
     return getUIStateFromAIState(aiState)
   },
   onSetAIState: async ({ state }) => {
     'use server'
     const session = await auth()
     if (!session?.user) return
-    
+
     const { chatId, messages } = state
     if (!messages?.length) return
-    
+
     const createdAt = new Date()
     const userId = session.user.id as string
     const path = `/chat/${chatId}`
     const title = (messages[0]?.content as string)?.substring(0, 100) || 'New Chat'
-    
+
     const chat: Chat = {
       id: chatId,
       title,
@@ -300,18 +228,17 @@ export const AI = createAI<AIState, UIState>({
 
 export const getUIStateFromAIState = (aiState: Chat) => {
   if (!aiState?.messages) return []
-  
-  return aiState.messages
-    .filter(message => message?.role !== 'system' && message?.content)
-    .map((message, index) => ({
-      id: `${aiState.chatId}-${index}`,
-      display:
-        message.role === 'user' ? (
-          <UserMessage>{message.content as string}</UserMessage>
-        ) : message.role === 'assistant' && typeof message.content === 'string' ? (
-          <BotMessage content={message.content} />
-        ) : null
-    }))
-    .filter(Boolean)
-}
 
+  return aiState.messages
+      .filter(message => message?.role !== 'system' && message?.content)
+      .map((message, index) => ({
+        id: `${aiState.chatId}-${index}`,
+        display:
+            message.role === 'user' ? (
+                <UserMessage>{message.content as string}</UserMessage>
+            ) : message.role === 'assistant' && typeof message.content === 'string' ? (
+                <BotMessage content={message.content} />
+            ) : null
+      }))
+      .filter(Boolean)
+}

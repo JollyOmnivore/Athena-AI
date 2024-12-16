@@ -19,7 +19,7 @@ function IconNextChat({
   className,
   inverted,
   ...props
-}: React.ComponentProps<'svg'> & { inverted?: boolean }) {
+}: React.ComponentProps<'svg'> & { inverted ?: boolean }) {
   const id = React.useId()
 
   return (

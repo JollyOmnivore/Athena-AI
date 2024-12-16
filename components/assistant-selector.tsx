@@ -13,10 +13,12 @@ import { useLocalStorage } from '@/lib/hooks/use-local-storage'
 import { cn } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { nanoid } from '@/lib/utils'
+import { allowedEmails } from '@/lib/allowed-emails'
 
 interface Assistant {
   id: string
   name: string
+  facultyOnly?: boolean
 }
 
 const assistants: Assistant[] = [
@@ -34,7 +36,8 @@ const assistants: Assistant[] = [
   },
   {
     id: process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_4_ID || '',
-    name: 'Vanilla ChatGPT4o (Faculty Only)'
+    name: 'Vanilla ChatGPT4o (Faculty Only)',
+    facultyOnly: true
   }
 ]
 
@@ -44,11 +47,48 @@ export function AssistantSelector() {
     assistants[0].id
   )
   const [isUpdating, setIsUpdating] = useState(false)
+  const [userEmail, setUserEmail] = useState<string | null>(null)
   const router = useRouter()
 
-  const selectedAssistant = assistants.find(
+  // Fetch user email on component mount
+  useEffect(() => {
+    const fetchUserEmail = async () => {
+      try {
+        const response = await fetch('/api/user')
+        const data = await response.json()
+        console.log('Response from /api/user:', data) // Debug log
+        console.log('User email:', data.email)
+        console.log('Allowed emails:', allowedEmails)
+        console.log('Is faculty?:', data.email && allowedEmails.includes(data.email))
+        setUserEmail(data.email)
+      } catch (error) {
+        console.error('Error fetching user email:', error)
+      }
+    }
+    fetchUserEmail()
+  }, [])
+
+  // Filter assistants based on user permissions
+  const availableAssistants = assistants.filter(assistant => {
+    if (!assistant.facultyOnly) return true
+    const isFaculty = userEmail && allowedEmails.includes(userEmail)
+    console.log('Checking assistant:', assistant.name, 'Faculty only?:', assistant.facultyOnly, 'Is faculty?:', isFaculty, 'User email:', userEmail)
+    console.log('Allowed emails:', allowedEmails)
+    return isFaculty
+  })
+
+  console.log('Available assistants:', availableAssistants)
+
+  const selectedAssistant = availableAssistants.find(
     assistant => assistant.id === selectedAssistantId
   )
+
+  // If selected assistant is not available, default to first available
+  useEffect(() => {
+    if (!selectedAssistant && availableAssistants.length > 0) {
+      setSelectedAssistantId(availableAssistants[0].id)
+    }
+  }, [selectedAssistant, availableAssistants])
 
   const updateAssistant = async (assistantId: string) => {
     if (isUpdating) return
@@ -91,7 +131,7 @@ export function AssistantSelector() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {assistants.map(assistant => (
+        {availableAssistants.map(assistant => (
           <DropdownMenuItem
             key={assistant.id}
             onClick={() => updateAssistant(assistant.id)}
