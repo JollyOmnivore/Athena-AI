@@ -57,6 +57,7 @@ async function submitUserMessage(content: string) {
   const aiState = getMutableAIState<typeof AI>()
 
   try {
+    console.log('🟦 Starting new message submission:', content)
     const cookieStore = cookies()
     const selectedAssistantId = cookieStore.get('selectedAssistantId')?.value ||
       process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_1_ID
@@ -64,6 +65,8 @@ async function submitUserMessage(content: string) {
     if (!selectedAssistantId) {
       throw new Error('No assistant ID available')
     }
+
+    console.log('🟦 Using Assistant ID:', selectedAssistantId)
 
     const responseUI = createStreamableUI(
       <div className="opacity-60 transition-opacity duration-300">
@@ -96,11 +99,20 @@ async function submitUserMessage(content: string) {
       if (!threadId) {
         const thread = await openAIClient.beta.threads.create()
         threadId = thread.id
+        console.log('🟦 Created new thread:', threadId)
         aiState.update({
           ...aiState.get(),
           threadId
         })
+      } else {
+        console.log('🟦 Using existing thread:', threadId)
       }
+
+      console.log('🟦 Sending message to OpenAI:', {
+        threadId,
+        content,
+        timestamp: new Date().toISOString()
+      })
 
       // Add message to thread
       await openAIClient.beta.threads.messages.create(threadId, {
@@ -108,26 +120,33 @@ async function submitUserMessage(content: string) {
         content
       })
 
+      console.log('🟦 Message sent to thread, creating run...')
+
       // Run the assistant
       const run = await openAIClient.beta.threads.runs.create(threadId, {
         assistant_id: selectedAssistantId
       })
+
+      console.log('🟦 Run created:', run.id)
 
       let runStatus = await openAIClient.beta.threads.runs.retrieve(threadId, run.id)
       let attempts = 0
       const maxAttempts = 200
 
       while (runStatus.status !== 'completed' && attempts < maxAttempts) {
+        console.log('🟨 Run status:', runStatus.status, 'Attempt:', attempts + 1)
         await new Promise(resolve => setTimeout(resolve, 1000))
         runStatus = await openAIClient.beta.threads.runs.retrieve(threadId, run.id)
         attempts++
 
         if (runStatus.status === 'failed') {
+          console.error('🟥 Run failed:', runStatus)
           throw new Error('Assistant run failed')
         }
       }
 
       if (attempts >= maxAttempts) {
+        console.error('🟥 Run timed out after', maxAttempts, 'attempts')
         return {
           id: nanoid(),
           display: (
@@ -143,25 +162,43 @@ async function submitUserMessage(content: string) {
         }
       }
 
-      const messages = await openAIClient.beta.threads.messages.list(threadId)
-      const lastMessage = messages.data[0]
+      console.log('🟩 Run completed, fetching messages...')
 
-      if (!lastMessage.content[0] || lastMessage.content[0].type !== 'text') {
+      const messages = await openAIClient.beta.threads.messages.list(threadId)
+      
+      if (!messages?.data?.length) {
+        console.error('🟥 No messages received from OpenAI')
+        throw new Error('No messages received from OpenAI')
+      }
+
+      const lastMessage = messages.data[0]
+      console.log('🟩 Received message:', {
+        messageId: lastMessage.id,
+        timestamp: new Date().toISOString(),
+        content: lastMessage.content
+      })
+
+      if (!lastMessage?.content?.[0] || lastMessage.content[0].type !== 'text') {
+        console.error('🟥 Invalid message format:', lastMessage)
         throw new Error('Invalid response format')
       }
 
       const messageContent = lastMessage.content[0].text.value
+      console.log('🟩 Processed message content:', messageContent.substring(0, 100) + '...')
 
-      // Add assistant message to state
+      // Add assistant message to state with explicit type checking
       const assistantMessage: Message = {
         id: nanoid(),
-        role: 'assistant',
+        role: 'assistant' as const, // explicitly type as const
         content: messageContent
       }
 
+      // Ensure messages array exists before updating
+      const currentMessages = aiState.get().messages || []
+      
       aiState.update({
         ...aiState.get(),
-        messages: [...(aiState.get().messages || []), assistantMessage]
+        messages: [...currentMessages, assistantMessage]
       })
 
       responseUI.done(
@@ -176,12 +213,19 @@ async function submitUserMessage(content: string) {
       }
 
     } catch (error) {
-      console.error('Error in OpenAI request:', error)
-      throw error
+      console.error('🟥 Error in OpenAI request:', error)
+      return {
+        id: nanoid(),
+        display: (
+          <div className="text-red-500">
+            Error: The assistant failed to respond. Please try again.
+          </div>
+        )
+      }
     }
 
   } catch (error) {
-    console.error('Error in submitUserMessage:', error)
+    console.error('🟥 Error in submitUserMessage:', error)
     return {
       id: nanoid(),
       display: (
